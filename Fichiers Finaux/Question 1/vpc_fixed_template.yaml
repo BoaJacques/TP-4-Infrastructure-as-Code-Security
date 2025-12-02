@@ -1,0 +1,87 @@
+Description: VPC with Public and Private Subnets
+Outputs:
+  PublicSubnet1Id:
+    Description: Public Subnet 1 ID
+    Export:
+      Name: !Sub '${EnvironmentName}-public-subnet-1'
+    Value: !Ref 'PublicSubnet1'
+  SecurityGroupId:
+    Description: Web Security Group ID
+    Export:
+      Name: !Sub '${EnvironmentName}-web-sg-id'
+    Value: !Ref 'WebSecurityGroup'
+  VPCId:
+    Description: VPC ID
+    Export:
+      Name: !Sub '${EnvironmentName}-vpc-id'
+    Value: !Ref 'VPC'
+Parameters:
+  EnvironmentName:
+    Default: polystudent-vpc
+    Type: String
+Resources:
+  IGWAttachment:
+    Properties:
+      InternetGatewayId: !Ref 'InternetGateway'
+      VpcId: !Ref 'VPC'
+    Type: AWS::EC2::VPCGatewayAttachment
+  InternetGateway:
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-igw'
+    Type: AWS::EC2::InternetGateway
+  PublicRoute:
+    Properties:
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref 'InternetGateway'
+      RouteTableId: !Ref 'PublicRouteTable'
+    Type: AWS::EC2::Route
+  PublicRouteTable:
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-public-rt'
+      VpcId: !Ref 'VPC'
+    Type: AWS::EC2::RouteTable
+  PublicSubnet1:
+    Properties:
+      AvailabilityZone: !Sub '${AWS::Region}a'
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-public-1'
+      VpcId: !Ref 'VPC'
+    Type: AWS::EC2::Subnet
+  PublicSubnet1Association:
+    Properties:
+      RouteTableId: !Ref 'PublicRouteTable'
+      SubnetId: !Ref 'PublicSubnet1'
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  VPC:
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Ref 'EnvironmentName'
+    Type: AWS::EC2::VPC
+  WebSecurityGroup:
+    Properties:
+      GroupDescription: Web Security Group
+      SecurityGroupIngress:
+        - CidrIp: '0.0.0.0/0'
+          FromPort: '80'
+          IpProtocol: tcp
+          ToPort: '80'
+        - CidrIp: '0.0.0.0/0'
+          FromPort: '22'
+          IpProtocol: tcp
+          ToPort: '22'
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-web-sg'
+      VpcId: !Ref 'VPC'
+    Type: AWS::EC2::SecurityGroup

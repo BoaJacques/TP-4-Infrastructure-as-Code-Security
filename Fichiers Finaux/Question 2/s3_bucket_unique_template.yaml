@@ -1,0 +1,37 @@
+Description: Secure S3 Bucket with unique name - us-east-1
+Outputs:
+  S3BucketARN:
+    Description: Secure S3 Bucket ARN
+    Value: !Sub 'arn:aws:s3:::${S3Bucket}'
+  S3BucketName:
+    Description: Secure S3 Bucket Name
+    Value: !Ref 'S3Bucket'
+Parameters:
+  BucketName:
+    Default: polystudent-s3-1763105784
+    Description: Unique S3 bucket name
+    Type: String
+  KMSKeyARN:
+    Default: arn:aws:kms:us-east-1:983201656846:key/alias/aws/s3
+    Description: KMS Key ARN for encryption
+    Type: String
+Resources:
+  S3Bucket:
+    DeletionPolicy: Retain
+    Properties:
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              KMSMasterKeyID: !Ref 'KMSKeyARN'
+              SSEAlgorithm: aws:kms
+      BucketName: !Ref 'BucketName'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+    Type: AWS::S3::Bucket
+

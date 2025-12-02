@@ -1,0 +1,7 @@
+{
+  "template_modifications": "Added VPC Flow Logs section with REJECT traffic to S3",
+  "cloudformation_update": "$(aws cloudformation describe-stacks --stack-name polystudent-vpc-stack --query "Stacks[0].StackStatus" --output text)",
+  "flow_logs_configuration": $(aws ec2 describe-flow-logs --filter "Name=resource-id,Values=vpc-04514fbb457dca0dc" --query "FlowLogs[?TrafficType=='REJECT']" --output json),
+  "s3_bucket_used": "polystudent-s3-1763105785",
+  "s3_logs_path": "vpcflow-logs/"
+}

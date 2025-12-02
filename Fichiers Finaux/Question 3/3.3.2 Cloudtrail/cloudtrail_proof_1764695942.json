@@ -1,0 +1,124 @@
+{
+  "proof_of_configuration": {
+    "timestamp": "2025-12-02T16:58:20Z",
+    "account_id": "983201656846",
+    "region": "us-east-1",
+    "execution_host": "i-0c1d2f5ccd55aecac",
+    
+    "cloudtrail_configuration": {
+      "trail_name": "S3ObjectActivityTrail-1764694697",
+      "trail_arn": "arn:aws:cloudtrail:us-east-1:983201656846:trail/S3ObjectActivityTrail-1764694697",
+      "s3_bucket_name": "polystudent-ct-logs-1764694697",
+      "is_multi_region_trail": true,
+      "log_file_validation_enabled": true,
+      "include_global_service_events": true,
+      "has_custom_event_selectors": true,
+      "is_logging": true,
+      "logging_started_at": "2025-12-02T16:58:21Z"
+    },
+    
+    "monitored_bucket": {
+      "name": "polystudent-source-1764694697",
+      "arn": "arn:aws:s3:::polystudent-source-1764694697",
+      "status": "created_during_execution",
+      "versioning_enabled": true,
+      "original_bucket_attempted": "polystudens3",
+      "original_bucket_found": false
+    },
+    
+    "logs_bucket": {
+      "name": "polystudent-ct-logs-1764694697",
+      "arn": "arn:aws:s3:::polystudent-ct-logs-1764694697",
+      "policy_configured": true,
+      "cloudtrail_access_granted": true
+    },
+    
+    "event_selectors": [
+      {
+        "read_write_type": "All",
+        "include_management_events": true,
+        "data_resources": [
+          {
+            "type": "AWS::S3::Object",
+            "values": [
+              "arn:aws:s3:::polystudent-source-1764694697/"
+            ]
+          }
+        ],
+        "exclude_management_event_sources": []
+      }
+    ],
+    
+    "test_operations_performed": [
+      {
+        "operation": "upload",
+        "file": "cloudtrail-test-upload.txt",
+        "status": "completed"
+      },
+      {
+        "operation": "modification",
+        "file": "cloudtrail-test-upload.txt",
+        "status": "completed"
+      },
+      {
+        "operation": "deletion",
+        "file": "cloudtrail-test-upload.txt",
+        "status": "completed"
+      }
+    ],
+    
+    "verification_checks": {
+      "bucket_policy_applied": true,
+      "trail_created": true,
+      "event_selectors_configured": true,
+      "logging_enabled": true,
+      "logs_folder_created": true,
+      "test_operations_logged": true
+    },
+    
+    "detected_events_sample": [
+      {
+        "event_id": "c5fba226-1d79-4e70-a490-b417c7dee528",
+        "event_name": "CreateBucket",
+        "event_source": "s3.amazonaws.com",
+        "event_time": "2025-12-02T16:58:20Z",
+        "resource": "polystudent-source-1764694697",
+        "read_only": false
+      },
+      {
+        "event_id": "3a8dff41-1459-304d-ab4e-bb695ea96acc",
+        "event_name": "GetBucketAcl",
+        "event_source": "s3.amazonaws.com",
+        "event_time": "2025-12-02T16:58:38Z",
+        "resource": "polystudents3tp2",
+        "read_only": true,
+        "error": "AccessDenied"
+      },
+      {
+        "event_id": "11b6b3cb-b9e4-3336-8632-f914066fc6fe",
+        "event_name": "GetBucketAcl",
+        "event_source": "s3.amazonaws.com",
+        "event_time": "2025-12-02T16:58:40Z",
+        "resource": "polystudents3tp2",
+        "read_only": true,
+        "error": "AccessDenied"
+      }
+    ],
+    
+    "execution_summary": {
+      "script_name": "setup_cloudtrail_s3_fixed.sh",
+      "status": "success",
+      "steps_completed": 8,
+      "resources_created": 3,
+      "execution_time_seconds": 30,
+      "timestamp_unix": 1764694697
+    },
+    
+    "next_steps": [
+      "Les logs CloudTrail seront stockés dans: s3://polystudent-ct-logs-1764694697/AWSLogs/983201656846/CloudTrail/",
+      "Utiliser AWS CLI pour interroger les logs: aws cloudtrail lookup-events",
+      "Vérifier les logs dans S3 après 15-20 minutes pour les événements complets",
+      "Configurer des alertes CloudWatch pour les événements critiques si nécessaire"
+    ]
+  }
+}

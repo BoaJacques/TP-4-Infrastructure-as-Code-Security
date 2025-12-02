@@ -1,0 +1,102 @@
+exercise: "3.3"
+description: >
+  Mise en place d'une réplication S3 entre un bucket source et un bucket backup
+  via un script Python générant un template CloudFormation.
+
+buckets:
+  source: "polystudents3-983201656846-src2"
+  destination: "polystudents3-983201656846-back2"
+
+cloudformation:
+  stack_name: "s3-replication-stack"
+  template_file: "s3_bucket_replication_template.yaml"
+  generator_script: "s3_bucket_with_replication.py"
+  create_stack_command: |
+    aws cloudformation create-stack \
+      --stack-name s3-replication-stack \
+      --template-body file://s3_bucket_replication_template.yaml \
+      --parameters \
+        ParameterKey=BucketName,ParameterValue=polystudents3-983201656846-src2 \
+        ParameterKey=DestinationBucketName,ParameterValue=polystudents3-983201656846-back2 \
+      --capabilities CAPABILITY_IAM
+
+verification:
+  replication_config:
+    command: >
+      aws s3api get-bucket-replication
+      --bucket polystudents3-983201656846-src2
+    output: |
+      {
+          "ReplicationConfiguration": {
+              "Rules": [
+                  {
+                      "Status": "Enabled", 
+                      "Prefix": "", 
+                      "Destination": {
+                          "Bucket": "arn:aws:s3:::polystudents3-983201656846-back2", 
+                          "StorageClass": "STANDARD"
+                      }, 
+                      "ID": "FullBucketReplication"
+                  }
+              ], 
+              "Role": "arn:aws:iam::983201656846:role/s3-replication-stack-S3ReplicationRole-eZsJMdvyDQy5"
+          }
+      }
+
+  source_versioning:
+    command: >
+      aws s3api get-bucket-versioning
+      --bucket polystudents3-983201656846-src2
+    output: |
+      {
+          "Status": "Enabled"
+      }
+
+  destination_versioning:
+    command: >
+      aws s3api get-bucket-versioning
+      --bucket polystudents3-983201656846-back2
+    output: |
+      {
+          "Status": "Enabled"
+      }
+
+optional_replication_test:
+  upload_command: >
+    echo "test replication" > test-repl.txt &&
+    aws s3 cp test-repl.txt s3://polystudents3-983201656846-src2/
+  list_destination_command: >
+    aws s3 ls s3://polystudents3-983201656846-back2/
+  comment: >
+    Si test-repl.txt apparaît dans le bucket de destination, cela confirme que
+    la réplication est fonctionnelle.
+
+  iam_replication_role:
+    command: >
+      aws iam get-role
+      --role-name s3-replication-stack-S3ReplicationRole-eZsJMdvyDQy5
+    output: |
+      {
+          "Role": {
+              "Description": "", 
+              "AssumeRolePolicyDocument": {
+                  "Version": "2012-10-17", 
+                  "Statement": [
+                      {
+                          "Action": "sts:AssumeRole", 
+                          "Effect": "Allow", 
+                          "Principal": {
+                              "Service": "s3.amazonaws.com"
+                          }
+                      }
+                  ]
+              }, 
+              "MaxSessionDuration": 3600, 
+              "RoleId": "AROA6J23CWAHA5YEGDK6A", 
+              "CreateDate": "2025-12-02T05:11:08Z", 
+              "RoleName": "s3-replication-stack-S3ReplicationRole-eZsJMdvyDQy5", 
+              "Path": "/", 
+              "RoleLastUsed": {}, 
+              "Arn": "arn:aws:iam::983201656846:role/s3-replication-stack-S3ReplicationRole-eZsJMdvyDQy5"
+          }
+      }

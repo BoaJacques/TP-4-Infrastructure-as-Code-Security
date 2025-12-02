@@ -1,0 +1,70 @@
+exercise: "3.3.2"
+description: >
+  Activation de CloudTrail pour journaliser les activités d'objets (Put/Delete)
+  sur un bucket S3 dédié, avec vérification dans les logs AWSLogs.
+
+cloudtrail_trail:
+  name: "S3ObjectActivityTrail-1764694697"
+  arn: "arn:aws:cloudtrail:us-east-1:983201656846:trail/S3ObjectActivityTrail-1764694697"
+  region: "us-east-1"
+  is_multi_region: true
+  log_file_validation_enabled: true
+  include_global_service_events: true
+  is_logging: true
+  logging_started_at: "2025-12-02T16:58:21Z"
+  logs_bucket: "polystudent-ct-logs-1764694697"
+
+monitored_bucket:
+  name: "polystudent-source-1764694697"
+  arn: "arn:aws:s3:::polystudent-source-1764694697"
+  versioning_enabled: true
+  created_during_execution: true
+
+event_selectors:
+  command: >
+    aws cloudtrail get-event-selectors
+    --trail-name S3ObjectActivityTrail-1764694697
+  output_summary: >
+    EventSelectors avec ReadWriteType=All, IncludeManagementEvents=true
+    et DataResources.Type=AWS::S3::Object pour
+    arn:aws:s3:::polystudent-source-1764694697/
+
+test_operations:
+  steps:
+    - echo "cloudtrail test" > cloudtrail-test.txt
+    - aws s3 cp cloudtrail-test.txt s3://polystudent-source-1764694697/cloudtrail-test-upload.txt
+    - echo "cloudtrail test modifié" > cloudtrail-test-modified.txt
+    - aws s3 cp cloudtrail-test-modified.txt s3://polystudent-source-1764694697/cloudtrail-test-upload.txt
+    - aws s3 rm s3://polystudent-source-1764694697/cloudtrail-test-upload.txt
+  status: "completed"
+
+logs_in_s3:
+  command: >
+    aws s3 ls s3://polystudent-ct-logs-1764694697/ --recursive
+  sample_output: |
+    2025-12-02 17:03:51  5766 AWSLogs/983201656846/CloudTrail/us-east-1/2025/12/02/983201656846_CloudTrail_us-east-1_20251202T1705Z_Z5f4T31CAaovcyRo.json.gz
+    2025-12-02 17:06:25  8623 AWSLogs/983201656846/CloudTrail/us-east-1/2025/12/02/983201656846_CloudTrail_us-east-1_20251202T1710Z_L720sWHzxYF2Ae1h.json.gz
+
+lookup_events:
+  command: >
+    aws cloudtrail lookup-events
+    --lookup-attributes AttributeKey=ResourceName,AttributeValue=polystudent-source-1764694697
+    --max-results 5
+  sample_events:
+    - event_name: "CreateBucket"
+      event_source: "s3.amazonaws.com"
+      read_only: false
+      resource: "polystudent-source-1764694697"
+    - event_name: "PutObject/DeleteObject"
+      comment: >
+        Ces événements apparaissent dans les fichiers JSON CloudTrail
+        du bucket de logs et prouvent la journalisation des modifications/suppressions d'objets.
+
+implementation_details:
+  script_used: "setup_cloudtrail_s3_fixed.sh"
+  status: "success"
+  resources_created: 3
+  notes: >
+    Le script crée un bucket de logs dédié, un trail CloudTrail multi-région,
+    configure les event selectors S3 (AWS::S3::Object) et exécute une séquence
+    d'upload/modification/suppression pour générer des événements dans CloudTrail.

@@ -1,0 +1,68 @@
+exercise: "4.1"
+tool: "Trivy"
+goal: >
+  Perform a vulnerability/misconfiguration scan on all IaC files
+  and generate a report for MEDIUM, HIGH and CRITICAL severities.
+
+commands:
+  - mkdir -p trivy-reports
+  - |
+    echo "=== SCAN DES FICHIERS IAC ==="
+    trivy config . \
+      --severity MEDIUM,HIGH,CRITICAL \
+      --format json \
+      --output trivy-reports/iac-scan-report.json
+  - |
+    trivy config . \
+      --severity MEDIUM,HIGH,CRITICAL \
+      --format table
+
+scan_summary:
+  timestamp_example: "2025-11-16T21:00:24-05:00"
+  detected_config_files: 23
+  report_json: "trivy-reports/iac-scan-report.json"
+  report_table: "stdout (copié dans le rapport)"
+
+key_findings:
+  - file: "hardening/action-shellcheck/Dockerfile"
+    severity: "HIGH"
+    issue: "Container runs as root (no USER non-root)"
+    ref: "https://avd.aquasec.com/misconfig/ds002"
+
+  - file: "polylab/ec2.json"
+    issues:
+      - severity: "HIGH"
+        issue: "IMDSv2 non requis (http_tokens pas forcé à required)"
+        ref: "https://avd.aquasec.com/misconfig/avd-aws-0028"
+      - severity: "HIGH"
+        issue: "Root block device non chiffré"
+        ref: "https://avd.aquasec.com/misconfig/avd-aws-0131"
+
+  - file: "polylab/vpc.yaml"
+    issues:
+      - severity: "CRITICAL"
+        issue: "Security Group autorise 0.0.0.0/0 en entrée"
+        ref: "https://avd.aquasec.com/misconfig/avd-aws-0107"
+      - severity: "HIGH"
+        issue: "Subnets publics avec MapPublicIpOnLaunch: true"
+        ref: "https://avd.aquasec.com/misconfig/avd-aws-0164"
+
+  - file: "vpc_fixed_template.yaml"
+    issues:
+      - severity: "CRITICAL"
+        issue: "Security Group autorise 0.0.0.0/0"
+      - severity: "HIGH"
+        issue: "PublicSubnet1 avec MapPublicIpOnLaunch: true"
+
+  - file: "vpc_template.yaml"
+    issues:
+      - severity: "CRITICAL"
+        issue: "Security Group autorise 0.0.0.0/0"
+      - severity: "HIGH"
+        issue: "PublicSubnet1/2 avec MapPublicIpOnLaunch: true"
+
+comment: >
+  Le scan Trivy confirme que plusieurs ressources IaC présentent des
+  mauvaises configurations de sécurité (SG trop ouverts, disques non chiffrés,
+  subnets avec IP publique automatique, container root). Ces résultats
+  serviront de base à la section 4.3 (mesures de remédiation).
